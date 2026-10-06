@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sinapsis-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sinapsis
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sinapsis-migrate
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/sinapsis?schema=public
+      SHADOW_DATABASE_URL: postgres://postgres:postgres@db:5432/sinapsis_shadow?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+    command: sh -c "npm i && npx prisma generate && npx prisma migrate dev --name init_v1_domain && npx prisma db seed"
+    # One-off task to run migrations and seed, then exit
+    restart: "no"
+
+volumes:
+  pgdata:
