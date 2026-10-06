@@ -1,19 +1,23 @@
-Comandos:
+# Base de datos de desarrollo
 
-Sincronizar el archivo de `prisma/schema.prisma` con la base de datos, desde la base de datos.
+Levanta PostgreSQL, aplica las migraciones existentes y ejecuta el seed idempotente:
 
 ```bash
-npx prisma db pull
+docker compose up --build
 ```
 
-Sincronizar el archivo de `prisma/schema.prisma` con la base de datos, desde el esquema hacia la basa de datos.
+PostgreSQL queda publicado en `localhost:5434` con base de datos, usuario y contraseña `sinapsis`, `postgres` y `postgres`, respectivamente.
+
+Para aplicar migraciones desde el host:
 
 ```bash
-npx prisma db push
+npm ci
+npx prisma migrate deploy
+npx prisma db seed
 ```
 
-Insertar Datos
+Validar el esquema sin modificar la base:
 
 ```bash
-ts-node main.ts
+npx prisma validate
 ```

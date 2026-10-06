@@ -24,11 +24,19 @@ async function ensureSystemRoles() {
   ];
 
   for (const r of roles) {
-    await prisma.role.upsert({
-      where: { tenantId_name: { tenantId: null, name: r.name } },
-      update: { description: r.description, code: r.code },
-      create: { tenantId: null, name: r.name, description: r.description, code: r.code },
+    const existing = await prisma.role.findFirst({
+      where: { tenantId: null, name: r.name },
     });
+    if (existing) {
+      await prisma.role.update({
+        where: { id: existing.id },
+        data: { description: r.description, code: r.code },
+      });
+    } else {
+      await prisma.role.create({
+        data: { tenantId: null, name: r.name, description: r.description, code: r.code },
+      });
+    }
   }
   console.info('System roles ensured.');
 }
@@ -44,16 +52,22 @@ async function importLegacyRolesIfAny() {
   }
 
   const rows = await prisma.$queryRawUnsafe('SELECT DISTINCT role FROM public.roles_users');
-  const legacy = Array.isArray(rows) ? rows.map(r => String(r.role)).filter(Boolean) : [];
+  const legacy = Array.isArray(rows)
+    ? rows
+        .map(r => (typeof r.role === 'string' ? r.role.trim().toUpperCase() : ''))
+        .filter(Boolean)
+    : [];
   if (legacy.length === 0) return;
 
   for (const name of legacy) {
-    const upName = String(name).toUpperCase();
-    await prisma.role.upsert({
-      where: { tenantId_name: { tenantId: null, name: upName } },
-      update: { description: 'Imported legacy role', code: null },
-      create: { tenantId: null, name: upName, description: 'Imported legacy role', code: null },
+    const existing = await prisma.role.findFirst({
+      where: { tenantId: null, name },
     });
+    if (!existing) {
+      await prisma.role.create({
+        data: { tenantId: null, name, description: 'Imported legacy role', code: null },
+      });
+    }
   }
   console.info(`Imported ${legacy.length} legacy role names into Role (tenantId = null).`);
   console.warn('User↔role assignments from legacy roles_users were NOT migrated because Membership requires tenantId and UUID users.');

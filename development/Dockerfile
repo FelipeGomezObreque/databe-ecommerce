@@ -12,10 +12,10 @@ COPY prisma ./prisma
 COPY prisma.config.ts ./
 
 # Install deps (include dev to have prisma CLI available inside)
-RUN npm i
+RUN npm ci
 
 # Copy rest of the project (seed, etc.)
 COPY . .
 
 # Default command runs migrations and seed
-CMD sh -c "npx prisma migrate dev --name init_v1_domain && npx prisma db seed"
+CMD sh -c "npx prisma migrate deploy && npx prisma db seed"
