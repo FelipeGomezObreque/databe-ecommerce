@@ -17,5 +17,5 @@ RUN npm ci
 # Copy rest of the project (seed, etc.)
 COPY . .
 
-# Default command runs migrations and seed
-CMD sh -c "npx prisma migrate deploy && npx prisma db seed"
+# Default command generates the client, then runs migrations and seed
+CMD sh -c "npx prisma generate && npx prisma migrate deploy && npx prisma db seed"
