@@ -736,6 +736,7 @@ model Payment {
   events PaymentEvent[]
 
   @@index([orderId])
+  @@unique([provider, externalPaymentId])
 }
 
 model PaymentEvent {
