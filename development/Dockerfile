@@ -1,5 +1,5 @@
 # Migration runner and seeder
-FROM node:20-alpine AS migrator
+FROM node:22-alpine AS migrator
 
 WORKDIR /app
 
@@ -11,8 +11,9 @@ COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 
-# Install deps (include dev to have prisma CLI available inside)
-RUN npm ci
+# Install dev dependencies because the Prisma CLI is required by this image.
+# Resolve the config entry point here so a corrupt install cannot be cached.
+RUN npm ci --include=dev && node -e "require.resolve('prisma/config')"
 
 # Copy rest of the project (seed, etc.)
 COPY . .

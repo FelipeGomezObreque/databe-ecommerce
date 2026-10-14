@@ -169,7 +169,7 @@ model Tenant {
   id        String        @id @default(uuid()) @db.Uuid
   name      String
   slug      String        @unique
-  status    GenericStatus
+  status    GenericStatus @default(ACTIVE)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
@@ -186,9 +186,9 @@ model Store {
   name      String
   slug      String
   domain    String?
-  currency  String
-  timezone  String
-  status    GenericStatus
+  currency  String        @default("CLP")
+  timezone  String        @default("America/Santiago")
+  status    GenericStatus @default(ACTIVE)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
@@ -338,7 +338,7 @@ model Category {
   name        String
   slug        String
   description String?
-  status      GenericStatus
+  status      GenericStatus @default(ACTIVE)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -353,16 +353,15 @@ model Category {
 }
 
 model Product {
-  id             String        @id @default(uuid()) @db.Uuid
-  storeId        String        @db.Uuid
-  name           String
-  slug           String
-  description    String?
-  brand          String?
-  status         GenericStatus
-  trackInventory Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id          String        @id @default(uuid()) @db.Uuid
+  storeId     String        @db.Uuid
+  name        String
+  slug        String
+  description String?
+  brand       String?
+  status      GenericStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   store             Store              @relation(fields: [storeId], references: [id])
   categories        ProductCategory[]
@@ -407,18 +406,20 @@ model OptionValue {
 }
 
 model ProductVariant {
-  id        String        @id @default(uuid()) @db.Uuid
-  productId String        @db.Uuid
-  storeId   String        @db.Uuid // denormalized to enforce UNIQUE(storeId, sku)
-  sku       String
-  barcode   String?
-  weight    Decimal?      @db.Decimal(10, 3)
-  height    Decimal?      @db.Decimal(10, 3)
-  width     Decimal?      @db.Decimal(10, 3)
-  length    Decimal?      @db.Decimal(10, 3)
-  status    GenericStatus
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id             String        @id @default(uuid()) @db.Uuid
+  productId      String        @db.Uuid
+  storeId        String        @db.Uuid // denormalized to enforce UNIQUE(storeId, sku)
+  sku            String
+  barcode        String?
+  weight         Decimal?      @db.Decimal(10, 3)
+  height         Decimal?      @db.Decimal(10, 3)
+  width          Decimal?      @db.Decimal(10, 3)
+  length         Decimal?      @db.Decimal(10, 3)
+  // Cada variante decide si su stock se controla (Inventory) o es ilimitado.
+  trackInventory Boolean       @default(true)
+  status         GenericStatus @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   store   Store   @relation(fields: [storeId], references: [id])
@@ -466,7 +467,9 @@ model PriceList {
   storeId   String        @db.Uuid
   name      String
   currency  String
-  status    GenericStatus
+  // Una sola lista predeterminada por tienda (indice unico parcial en migracion SQL).
+  isDefault Boolean       @default(false)
+  status    GenericStatus @default(ACTIVE)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
