@@ -8,6 +8,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { Pool } = require('pg');
 const { PrismaPg } = require('@prisma/adapter-pg');
+const { bootstrapAdmin, describe } = require('./bootstrap-admin');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -76,6 +77,14 @@ async function importLegacyRolesIfAny() {
 async function main() {
   await ensureSystemRoles();
   await importLegacyRolesIfAny();
+
+  // El administrador inicial es opt-in: sin ninguna variable BOOTSTRAP_ADMIN_* se omite.
+  // Si se define solo una de ellas, bootstrapAdmin falla con un mensaje claro.
+  if (process.env.BOOTSTRAP_ADMIN_EMAIL || process.env.BOOTSTRAP_ADMIN_PASSWORD) {
+    console.info(describe(await bootstrapAdmin(prisma)));
+  } else {
+    console.info('BOOTSTRAP_ADMIN_* no definidas: se omite la creacion del administrador de plataforma.');
+  }
 }
 
 main()
@@ -84,7 +93,8 @@ main()
     await pool.end();
   })
   .catch(async (e) => {
-    console.error(e);
+    // Nunca volcamos el error completo de bootstrap (podria incluir datos sensibles).
+    console.error(e && e.name === 'BootstrapError' ? `Error: ${e.message}` : e);
     await prisma.$disconnect();
     await pool.end();
     process.exit(1);

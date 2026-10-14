@@ -101,6 +101,12 @@ enum AuthProvider {
 }
 
 // Roles del sistema sugeridos para bootstrapping
+// Rol GLOBAL de plataforma. Independiente de los roles por tenant (Membership/Role).
+enum PlatformRole {
+  PLATFORM_USER
+  PLATFORM_ADMIN
+}
+
 enum SystemRole {
   OWNER
   ADMIN
@@ -214,6 +220,7 @@ model User {
   lastName    String?
   phone       String?
   status      GenericStatus
+  platformRole PlatformRole    @default(PLATFORM_USER)
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   credential  AuthCredential?
