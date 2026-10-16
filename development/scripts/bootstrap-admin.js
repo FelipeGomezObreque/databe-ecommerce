@@ -16,6 +16,10 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(e instanceof BootstrapError ? `Error: ${e.message}` : 'Error inesperado al crear el administrador inicial.');
+  if (e instanceof BootstrapError) {
+    console.error(`Error: ${e.message}`);
+  } else {
+    console.error(`Error inesperado al crear el administrador inicial: ${e && e.name ? `${e.name}: ` : ''}${e && e.message ? e.message : e}`);
+  }
   process.exit(1);
 });
